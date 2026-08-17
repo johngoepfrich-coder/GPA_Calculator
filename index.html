@@ -38,6 +38,17 @@
       gap: 16px;
     }
     h1 { margin: 0; font-size: 1.6rem; }
+    .disclaimer {
+  max-width: 1100px;
+  margin: 16px auto;
+  padding: 12px 16px;
+  background: #fff8e1;
+  border: 1px solid #f0c36d;
+  border-radius: 8px;
+  color: #664d03;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
     main {
       max-width: 1100px;
       margin: 24px auto;
@@ -160,11 +171,66 @@
     .bad { background:#fdebec; color:#7a1e1e; border:1px solid #f2b9bd; }
     .issues { margin-top:6px; color:#7a1e1e; }
 
-    @media print{
-      header,.btn{display:none!important}
-      .card{box-shadow:none}
-      main{padding:0}
-    }
+@media print {
+
+  @page {
+    size: letter portrait;
+    margin: 0.4in;
+  }
+
+  body {
+    background: white;
+    font-size: 10pt;
+    zoom: 90%;
+  }
+
+  header {
+    display: none !important;
+  }
+
+  .card {
+    box-shadow: none;
+    border: 1px solid #999;
+    break-inside: avoid;
+  }
+
+  .grid {
+    display: block;
+  }
+
+  main {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .btn,
+  #addCourseBtn,
+  #printBtn {
+    display: none !important;
+  }
+
+  .kpi .value {
+    font-size: 1.15rem;
+  }
+
+  table {
+    font-size: 9pt;
+  }
+
+  .disclaimer {
+    margin-bottom: 12px;
+    border: 1px solid #999;
+    background: white;
+  }
+
+  input,
+  select {
+    border: none !important;
+    background: transparent !important;
+    padding: 0;
+  }
+}
   </style>
 </head>
 <body>
@@ -173,6 +239,13 @@
     <h1>GPA Calculator</h1>
   </div>
 </header>
+
+<div class="disclaimer">
+  <strong>Disclaimer:</strong>
+  This GPA Calculator was developed by The Learning Commons for planning and advising purposes only.
+  Results are estimates based on the information entered and should not be considered an official GPA calculation.
+  Official GPA calculations are determined by Quinnipiac University in accordance with university policies.
+</div>
 
 <main>
   <div class="grid">
@@ -235,9 +308,15 @@
 
     <!-- RIGHT SIDE -->
     <aside class="stack">
-      <div class="card">
-        <header><h2>Projected Results</h2></header>
-        <div class="body">
+<div class="card">
+  <header><h2>Projected Results</h2></header>
+  <div class="body">
+
+    <div style="margin-bottom:12px;">
+      <button id="printBtn" class="btn">
+        🖨 Print Calculator
+      </button>
+    </div>
           <div class="kpis">
             <div class="kpi"><div class="label">Current Cumulative GPA</div><div id="outPrevGPA" class="value"></div></div>
             <div class="kpi"><div class="label">Current Credits</div><div id="outPrevCredits" class="value"></div></div>
@@ -602,6 +681,9 @@
     updateStanding(sem.termGpa, cumGPA, showStanding);
   }
 
+  document.getElementById("printBtn").addEventListener("click", () => {
+  window.print();
+});
   addCourseBtn.onclick=addCourse;
 
   // Wire inputs
