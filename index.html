@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GPA Calculator – Quinnipiac University</title>
+  <style>
+    :root {
+      --qu-navy: #0C2340;
+      --qu-gold: #FFB81C;
+      --qu-light: #418FDE;
+      --bg: #f7f9fc;
+      --card-bg: #ffffff;
+      --text: #0c0f14;
+      --muted: #5b6678;
+      --border: #e2e8f0;
+      --radius: 12px;
+      --shadow: 0 6px 16px rgba(12,35,64,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    header {
+      background: var(--qu-navy);
+      color: #fff;
+      padding: 24px 16px;
+      border-bottom: 4px solid var(--qu-gold);
+    }
+    header .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    h1 { margin: 0; font-size: 1.6rem; }
+    main {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px 64px;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr;
+    }
+    @media(min-width: 980px){
+      .grid { grid-template-columns: 2fr 1fr; }
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card header {
+      background: var(--qu-navy);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .card header h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+    .card .body { padding: 16px; }
+    .hint { color: var(--muted); font-size: .9rem; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: var(--qu-navy);
+      color: #fff;
+      font-weight: 600;
+    }
+    .btn.small { padding: 6px 10px; font-size: .9rem; }
+    .btn.secondary { background: #e9eef6; color: var(--qu-navy); }
+    .btn.danger { background:#912d2d; }
+
+    /* Table */
+    table { width:100%; border-collapse:separate; border-spacing:0; }
+    thead th {
+      background:var(--qu-navy);
+      color:#fff;
+      padding:10px;
+      text-align:left;
+    }
+    tbody td {
+      background:#fff;
+      padding:8px 10px;
+      border-bottom:1px solid var(--border);
+    }
+    input[type="text"],
+    input[type="number"],
+    select {
+      width:100%;
+      padding:8px 10px;
+      border:1px solid var(--border);
+      border-radius:8px;
+      background:#fff;
+      font-size:.95rem;
+    }
+    /* Remove number arrows for cross-browser consistency */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance:none; margin:0;
+    }
+    .repeat-area {
+      border-left:3px solid var(--qu-light);
+      padding-left:12px;
+      margin-top:8px;
+    }
+    .attempt {
+      display:grid;
+      grid-template-columns:1fr 1fr auto;
+      gap:8px;
+      margin:8px 0;
+      align-items:end;
+    }
+
+    /* KPIs */
+    .kpis {
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+    @media(min-width:520px){
+      .kpis { grid-template-columns:1fr 1fr; }
+    }
+    .kpi {
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:12px;
+      text-align:center;
+      min-height:76px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .kpi .label { font-size:.8rem; color:var(--muted); }
+    .kpi .value { font-size:1.6rem; font-weight:800; color:var(--qu-navy); }
+
+    /* Standing */
+    .status-badge {
+      display:inline-flex;
+      padding:8px 14px;
+      border-radius:999px;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+    .good { background:#e8f7ef; color:#1f7a38; border:1px solid #bfe6c9; }
+    .bad { background:#fdebec; color:#7a1e1e; border:1px solid #f2b9bd; }
+    .issues { margin-top:6px; color:#7a1e1e; }
+
+    @media print{
+      header,.btn{display:none!important}
+      .card{box-shadow:none}
+      main{padding:0}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>GPA Calculator</h1>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <!-- LEFT SIDE -->
+    <section class="stack">
+      <div class="card">
+        <header><h2>Current Grades and Credits</h2></header>
+        <div class="body">
+          <p class="hint">
+            “Current Credits (hrs cmpt)”, “Hrs Calc”, and “Grade Points” can be found at the bottom of a student’s
+            unofficial transcript (Academics → Self‑Service).  Look for the bottom row labeled "Cumulative Totals:"
+          </p>
+
+          <!-- NEW: Current Credits (hrs cmpt) -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <label>Hrs Cmpt</label>
+              <input id="priorCreditsCmpt" type="number" inputmode="decimal" min="0" step="1" placeholder="120.00">
+            </div>
+            <div>
+              <label>Hrs Calc</label>
+              <input id="priorHours" type="number" inputmode="decimal" min="0" step="1" placeholder="45.00">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px;">
+            <div>
+              <label>Grade Points</label>
+              <input id="priorPoints" type="number" inputmode="decimal" min="0" step="1" placeholder="120.00">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CURRENT COURSES -->
+      <div class="card">
+        <header><h2>Current Courses & Expected Grades</h2></header>
+        <div class="body">
+          <p class="hint">Add all current semester courses. Mark repeats and add all previous attempts.</p>
+
+          <div style="border:1px solid var(--border); border-radius:10px; overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th>Credits</th>
+                  <th>Expected Grade</th>
+                  <th>Repeat?</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="coursesTbody"></tbody>
+            </table>
+          </div>
+
+          <button id="addCourseBtn" class="btn" style="margin-top:10px;">＋ Add Course</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT SIDE -->
+    <aside class="stack">
+      <div class="card">
+        <header><h2>Projected Results</h2></header>
+        <div class="body">
+          <div class="kpis">
+            <div class="kpi"><div class="label">Current Cumulative GPA</div><div id="outPrevGPA" class="value"></div></div>
+            <div class="kpi"><div class="label">Current Credits</div><div id="outPrevCredits" class="value"></div></div>
+            <div class="kpi"><div class="label">Expected Term GPA</div><div id="outTermGPA" class="value"></div></div>
+            <div class="kpi"><div class="label">Expected Term Credits</div><div id="outTermCredits" class="value"></div></div>
+            <div class="kpi"><div class="label">Expected Cumulative GPA</div><div id="outCumGPA" class="value"></div></div>
+            <div class="kpi"><div class="label">Expected Cumulative Credits</div><div id="outCumCredits" class="value"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="standingCard" style="display:none;">
+        <header><h2>Academic Standing</h2></header>
+        <div class="body">
+          <div id="standingBadge"></div>
+          <ul id="standingIssues" class="issues"></ul>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+  // Include "P" (Pass — no GPA) and "W" (Withdraw — no GPA/no credits)
+  const LETTERS = ["", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F", "P", "W"];
+  const GRADE_POINTS = {
+    "A":4.00,"A-":3.67,"B+":3.33,"B":3.00,"B-":2.67,
+    "C+":2.33,"C":2.00,"C-":1.67,"D":1.00,"F":0.00,
+    // P/W do not generate GPA points; use null to signal "no GPA hours"
+    "P": null, "W": null
+  };
+
+  const tbody = document.getElementById("coursesTbody");
+  const addCourseBtn = document.getElementById("addCourseBtn");
+
+  const priorCreditsCmptEl = document.getElementById("priorCreditsCmpt"); // NEW
+  const priorHoursEl = document.getElementById("priorHours");
+  const priorPointsEl = document.getElementById("priorPoints");
+
+  const outPrevGPA = document.getElementById("outPrevGPA");
+  const outPrevCredits = document.getElementById("outPrevCredits");
+  const outTermGPA = document.getElementById("outTermGPA");
+  const outTermCredits = document.getElementById("outTermCredits");
+  const outCumGPA = document.getElementById("outCumGPA");
+  const outCumCredits = document.getElementById("outCumCredits");
+
+  const standingCard = document.getElementById("standingCard");
+  const standingBadge = document.getElementById("standingBadge");
+  const standingIssues = document.getElementById("standingIssues");
+
+  let courseCounter = 0;
+
+  const num = v => parseFloat(v) || 0;
+  const fmt = v => (isFinite(v) ? v.toFixed(2) : "");
+
+  function formatOnBlur(el){
+    el.addEventListener("blur", () => {
+      if(el.value.trim()==="") return;
+      el.value = fmt(parseFloat(el.value));
+    });
+  }
+
+  function gradeSelect(defaultValue=""){
+    const sel=document.createElement("select");
+    for(const g of LETTERS){
+      const opt=document.createElement("option");
+      opt.value=g;
+      opt.textContent=(g===""?"--":g);
+      if(g===defaultValue) opt.selected=true;
+      sel.appendChild(opt);
+    }
+    sel.addEventListener("change", recalc);
+    return sel;
+  }
+
+  function addCourse(){
+    const id="c"+(++courseCounter);
+    const tr=document.createElement("tr");
+    tr.dataset.id=id;
+
+    // COURSE NAME
+    const tdName=document.createElement("td");
+    const nameInput=document.createElement("input");
+    nameInput.placeholder="EN 101";
+    nameInput.addEventListener("input", recalc);
+    tdName.appendChild(nameInput);
+
+    // CREDITS (step=1 for click increments)
+    const tdCredits=document.createElement("td");
+    const creditInput=document.createElement("input");
+    creditInput.type="number";
+    creditInput.step="1";
+    creditInput.inputmode="decimal";
+    creditInput.placeholder="3.00";
+    creditInput.addEventListener("input", recalc);
+    formatOnBlur(creditInput);
+    tdCredits.appendChild(creditInput);
+
+    // EXPECTED GRADE
+    const tdGrade=document.createElement("td");
+    const gradeSel=gradeSelect("");
+    tdGrade.appendChild(gradeSel);
+
+    // REPEAT?
+    const tdRepeat=document.createElement("td");
+    const repeatChk=document.createElement("input");
+    repeatChk.type="checkbox";
+    tdRepeat.appendChild(repeatChk);
+
+    // ACTIONS
+    const tdActions=document.createElement("td");
+    const removeBtn=document.createElement("button");
+    removeBtn.className="btn small danger";
+    removeBtn.textContent="Remove";
+    removeBtn.onclick=()=>{ repeatRow.remove(); tr.remove(); recalc(); };
+    tdActions.appendChild(removeBtn);
+
+    tr.appendChild(tdName);
+    tr.appendChild(tdCredits);
+    tr.appendChild(tdGrade);
+    tr.appendChild(tdRepeat);
+    tr.appendChild(tdActions);
+
+    // REPEAT ROW (previous attempts)
+    const repeatRow=document.createElement("tr");
+    repeatRow.style.display="none";
+    repeatRow.innerHTML=`<td colspan="5">
+      <div class="repeat-area">
+        <p class="hint">Add previous attempts if repeated. W = no hours/points/credits; P = credits only.</p>
+        <div class="attempts"></div>
+        <button class="btn secondary small">＋ Add Previous Attempt</button>
+      </div>
+    </td>`;
+
+    const attemptsWrap=repeatRow.querySelector(".attempts");
+    const addAttemptButton=repeatRow.querySelector("button");
+
+    function addAttempt(){
+      const att=document.createElement("div");
+      att.className="attempt";
+
+      const gWrap=document.createElement("div");
+      const gLbl=document.createElement("label"); gLbl.textContent="Prev Grade";
+      const gSel=gradeSelect("F");
+      gWrap.appendChild(gLbl); gWrap.appendChild(gSel);
+
+      const hWrap=document.createElement("div");
+      const hLbl=document.createElement("label"); hLbl.textContent="Prev Hours";
+      const hInp=document.createElement("input");
+      hInp.type="number";
+      hInp.step="1";
+      hInp.inputmode="decimal";
+      hInp.value=creditInput.value||"";
+      hInp.addEventListener("input", recalc);
+      formatOnBlur(hInp);
+      hWrap.appendChild(hLbl); hWrap.appendChild(hInp);
+
+      function syncNoGpaGrades(){
+        // For W and P: no GPA hours. Keep credit hours input enabled because we still need to
+        // know credits for earned-credit subtraction when P was previously earned.
+        if(gSel.value==="W"){
+          hInp.value="0.00";
+          hInp.disabled=true; // W contributes nothing at all
+        } else {
+          hInp.disabled=false;
+        }
+      }
+      gSel.addEventListener("change", ()=>{syncNoGpaGrades(); recalc();});
+      syncNoGpaGrades();
+
+      const rm=document.createElement("button");
+      rm.className="btn small danger";
+      rm.textContent="Remove";
+      rm.onclick=()=>{ att.remove(); recalc(); };
+
+      att.appendChild(gWrap);
+      att.appendChild(hWrap);
+      att.appendChild(rm);
+      attemptsWrap.appendChild(att);
+      recalc();
+    }
+
+    addAttemptButton.onclick=addAttempt;
+
+    repeatChk.addEventListener("change",()=>{
+      repeatRow.style.display=repeatChk.checked?"":"none";
+      if(repeatChk.checked && attemptsWrap.children.length===0) addAttempt();
+      recalc();
+    });
+
+    tbody.appendChild(tr);
+    tbody.appendChild(repeatRow);
+    recalc();
+  }
+
+  /**
+   * Compute term totals:
+   * - gpaHours: hours that count in GPA (letters incl. F; NOT P/W)
+   * - gradePoints: sum(points_per_credit * credits)
+   * - earnedCredits: credits that count toward completion (letters w/ passing points > 0 AND P; NOT W; F earns 0)
+   */
+  function semesterTotals(){
+    let gpaHours=0, gradePoints=0, earnedCredits=0;
+
+    for(const tr of tbody.querySelectorAll("tr[data-id]")){
+      const creditsVal=num(tr.children[1].querySelector("input").value);
+      const grade=tr.children[2].querySelector("select").value;
+
+      if(grade==="" || creditsVal<=0) continue;
+
+      if(grade==="W"){
+        // no GPA, no credits
+        continue;
+      }
+      if(grade==="P"){
+        // credits only
+        earnedCredits += creditsVal;
+        continue;
+      }
+
+      // Letter grades (A-D-F)
+      const pts = (grade in GRADE_POINTS) ? GRADE_POINTS[grade] : null;
+      if(pts === null){
+        // Unknown/no impact
+        continue;
+      }
+      gpaHours += creditsVal;
+      gradePoints += creditsVal * pts;
+      if(pts > 0) earnedCredits += creditsVal; // F earns 0 credits
+    }
+
+    return {
+      gpaHours,
+      gradePoints,
+      earnedCredits,
+      termGpa: (gpaHours>0 ? gradePoints/gpaHours : null)
+    };
+  }
+
+  /**
+   * Sum of previous attempts to subtract if a course is marked as repeat.
+   * Returns:
+   *  - subGpaHours, subGradePoints: remove prior GPA contribution (letters incl. F; NOT P/W)
+   *  - subEarnedCredits: remove prior earned credits (passing letters and P; NOT W; F earns 0)
+   */
+  function repeatAdjust(){
+    let subGpaHours=0, subGradePoints=0, subEarnedCredits=0;
+
+    for(const tr of tbody.querySelectorAll("tr[data-id]")){
+      const repeatRow=tr.nextElementSibling;
+      if(!repeatRow || repeatRow.style.display==="none") continue;
+
+      for(const a of repeatRow.querySelectorAll(".attempt")){
+        const g=a.querySelector("select").value;
+        const h=num(a.querySelector("input").value);
+
+        if(g==="" || h<=0) continue;
+
+        if(g==="W"){
+          // no GPA, no credits to subtract
+          continue;
+        }
+        if(g==="P"){
+          // subtract previously earned credits only
+          subEarnedCredits += h;
+          continue;
+        }
+
+        // Letter grades
+        const pts = (g in GRADE_POINTS) ? GRADE_POINTS[g] : null;
+        if(pts === null) continue; // safety
+
+        subGpaHours += h;
+        subGradePoints += h * pts;
+        if(pts > 0) subEarnedCredits += h; // subtract if previously passed
+      }
+    }
+
+    return { subGpaHours, subGradePoints, subEarnedCredits };
+  }
+
+  function hasAnyData(sem, priorH, priorP){
+    const priorReady=(priorH>0 && priorP>0);
+    const termReady=(sem.gpaHours && sem.gpaHours>0) || (sem.earnedCredits && sem.earnedCredits>0);
+    return priorReady || termReady;
+  }
+
+  function updateStanding(semGPA, cumGPA, show){
+    if(!show){
+      standingCard.style.display="none";
+      standingBadge.textContent="";
+      standingBadge.className="";
+      standingIssues.innerHTML="";
+      return;
+    }
+    const TERM_MIN=2.25, CUM_MIN=2.00;
+    const issues=[];
+    if(typeof semGPA==="number" && isFinite(semGPA)){
+      if(semGPA<TERM_MIN) issues.push(`Term GPA is ${(TERM_MIN-semGPA).toFixed(2)} below requirement.`);
+    }
+    if(typeof cumGPA==="number" && isFinite(cumGPA)){
+      if(cumGPA<CUM_MIN) issues.push(`Cumulative GPA is ${(CUM_MIN-cumGPA).toFixed(2)} below requirement.`);
+    }
+
+    standingIssues.innerHTML="";
+    if(issues.length===0){
+      if(!(typeof semGPA==="number" && isFinite(semGPA)) &&
+         !(typeof cumGPA==="number" && isFinite(cumGPA))){
+        standingCard.style.display="none";
+        return;
+      }
+      standingBadge.className="status-badge good";
+      standingBadge.textContent="Good Standing";
+      standingCard.style.display="";
+    } else {
+      standingBadge.className="status-badge bad";
+      standingBadge.textContent="Deficiency";
+      for(const msg of issues){
+        const li=document.createElement("li");
+        li.textContent=msg;
+        standingIssues.appendChild(li);
+      }
+      standingCard.style.display="";
+    }
+  }
+
+  function recalc(){
+    const priorCreditsCmpt = num(priorCreditsCmptEl.value); // NEW: drives "Previous Credits"
+    const priorH = num(priorHoursEl.value);
+    const priorP = num(priorPointsEl.value);
+
+    // Previous (cumulative) GPA from prior hours & points
+    const prevGPA = (priorH>0 && priorP>0) ? (priorP / priorH) : null;
+
+    // Term totals
+    const sem = semesterTotals();
+
+    // Repeats subtract prior attempts
+    const { subGpaHours, subGradePoints, subEarnedCredits } = repeatAdjust();
+
+    // Combine for GPA
+    const combinedHrs = (priorH||0) + (sem.gpaHours||0);
+    const combinedPts = (priorP||0) + (sem.gradePoints||0);
+    const adjHrs = Math.max(0, combinedHrs - subGpaHours);
+    const adjPts = Math.max(0, combinedPts - subGradePoints);
+    const cumGPA = (adjHrs>0 ? adjPts/adjHrs : null);
+
+    // Credits (completion): use NEW "Current Credits (hrs cmpt)" as base
+    // Add current term earned credits; subtract earned credits removed by repeats
+    const termEarned = sem.earnedCredits || 0;
+    const adjEarned = Math.max(0, (priorCreditsCmpt || 0) + termEarned - subEarnedCredits);
+
+    // Outputs
+    outPrevGPA.textContent = (prevGPA!==null ? prevGPA.toFixed(3) : "");
+    outPrevCredits.textContent = (priorCreditsCmpt>0 ? priorCreditsCmpt.toFixed(2) : "");
+    outTermGPA.textContent = (sem.termGpa!==null ? sem.termGpa.toFixed(3) : "");
+    outTermCredits.textContent = (termEarned>0 ? termEarned.toFixed(2) : "");
+    outCumGPA.textContent = (cumGPA!==null ? cumGPA.toFixed(3) : "");
+    outCumCredits.textContent = (adjEarned>0 ? adjEarned.toFixed(2) : "");
+
+    const showStanding = hasAnyData(sem, priorH, priorP);
+    updateStanding(sem.termGpa, cumGPA, showStanding);
+  }
+
+  addCourseBtn.onclick=addCourse;
+
+  // Wire inputs
+  priorCreditsCmptEl.oninput = recalc; // NEW
+  priorHoursEl.oninput = recalc;
+  priorPointsEl.oninput = recalc;
+
+  formatOnBlur(priorCreditsCmptEl); // NEW
+  formatOnBlur(priorHoursEl);
+  formatOnBlur(priorPointsEl);
+
+  // Start with one row
+  addCourse();
+</script>
+</body>
+</html>
