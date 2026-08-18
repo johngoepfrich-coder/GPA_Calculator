@@ -400,7 +400,7 @@
     // COURSE NAME
     const tdName=document.createElement("td");
     const nameInput=document.createElement("input");
-    nameInput.placeholder="EN 101";
+    nameInput.placeholder="Course Name";
     nameInput.addEventListener("input", recalc);
     tdName.appendChild(nameInput);
 
@@ -410,7 +410,7 @@
     creditInput.type="number";
     creditInput.step="1";
     creditInput.inputmode="decimal";
-    creditInput.placeholder="3.00";
+    creditInput.placeholder="x.xx";
     creditInput.addEventListener("input", recalc);
     formatOnBlur(creditInput);
     tdCredits.appendChild(creditInput);
